@@ -12,6 +12,9 @@
     <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://vjs.zencdn.net/7.15.4/video.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
     <h1>Watch Movie Together</h1>
@@ -25,6 +28,22 @@
     <div id="videoContainer"></div>  <!-- This is where the video player will be inserted -->
 
     <script>
+        // Firebase configuration and setup
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWNDZLIqkLSQUdswT-2H-jr-0Dg2gvuik",
+            authDomain: "private-watch-party.firebaseapp.com",
+            projectId: "private-watch-party",
+            storageBucket: "private-watch-party.firebasestorage.app",
+            messagingSenderId: "36283139121",
+            appId: "1:36283139121:web:cff1ed864b7349061c0110",
+            databaseURL: "https://private-watch-party-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const videoRef = db.ref("videoState");
+
+        let videoElement = null;
+
         // Function to fetch the movie stream based on IMDb ID
         function fetchMovie() {
             const imdbId = document.getElementById("imdbId").value;
@@ -33,14 +52,14 @@
                 return;
             }
 
-            // Use a publicly available working HLS stream URL for testing
-            let streamUrl = 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8';  // Public stream
+            // Use the working HLS stream URL
+            let streamUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';  // Use public stream for testing
 
             // Create the video player dynamically
             const videoContainer = document.getElementById("videoContainer");
             videoContainer.innerHTML = '';  // Clear previous video
 
-            const videoElement = document.createElement("video");
+            videoElement = document.createElement("video");
             videoElement.id = "moviePlayer";
             videoElement.className = "video-js vjs-default-skin";
             videoElement.controls = true;
@@ -65,6 +84,43 @@
             } else {
                 alert("Your browser doesn't support HLS streaming.");
             }
+
+            // Sync video state with Firebase
+            videoElement.addEventListener('play', () => {
+                videoRef.set({
+                    playing: true,
+                    currentTime: videoElement.currentTime
+                });
+            });
+
+            videoElement.addEventListener('pause', () => {
+                videoRef.set({
+                    playing: false,
+                    currentTime: videoElement.currentTime
+                });
+            });
+
+            // Sync video time with Firebase
+            videoElement.addEventListener('timeupdate', () => {
+                if (!videoElement.paused) {
+                    videoRef.update({
+                        currentTime: videoElement.currentTime
+                    });
+                }
+            });
+
+            // Listen to Firebase changes for sync
+            videoRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.currentTime) {
+                    videoElement.currentTime = data.currentTime;
+                    if (data.playing && videoElement.paused) {
+                        videoElement.play();
+                    } else if (!data.playing && !videoElement.paused) {
+                        videoElement.pause();
+                    }
+                }
+            });
         }
     </script>
 </body>
