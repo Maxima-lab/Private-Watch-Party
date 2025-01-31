@@ -1,9 +1,9 @@
 import express from "express";
-import fetch from "node-fetch";
-import cors from "cors";
+import fetch from "node-fetch";  // ES Module import
+import cors from "cors";  // Import CORS middleware
 
 const app = express();
-app.use(cors());
+app.use(cors());  // Enable CORS for all origins (you can specify a domain if needed)
 
 app.get("/movie/:tmdbId", async (req, res) => {
     const { tmdbId } = req.params;
