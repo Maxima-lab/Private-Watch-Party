@@ -4,33 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Watch Party</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.8/video-js.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
-        }
-        textarea {
-            width: 80%;
-            height: 100px;
-            margin: 10px 0;
-        }
-        iframe {
-            width: 80%;
-            height: 500px;
-            border: none;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        input, button { padding: 10px; margin: 5px; }
+        video { width: 80%; }
     </style>
 </head>
 <body>
     <h1>Watch Movie Together</h1>
-    <textarea id="embedCode" placeholder="Paste Embed Code Here"></textarea><br>
-    <button onclick="loadVideo()">Load Video</button>
-    <div id="videoContainer"></div>
 
-    <!-- Firebase CDN -->
+    <input type="text" id="tmdbId" placeholder="Enter TMDB Movie ID">
+    <button onclick="fetchMovie()">Load Movie</button>
+
+    <br><br>
+    
+    <!-- Video Player -->
+    <video id="videoPlayer" class="video-js vjs-default-skin" controls></video>
+
+    <br><br>
+    
+    <input type="number" id="syncTime" placeholder="Enter Time (seconds)">
+    <button onclick="syncVideo()">Sync Video</button>
+
+    <!-- Firebase & Video.js -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.8/video.min.js"></script>
 
     <script>
         // Firebase configuration
@@ -43,69 +43,52 @@
             appId: "1:36283139121:web:cff1ed864b7349061c0110",
             databaseURL: "https://private-watch-party-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
-    
+
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let videoTimeRef = db.ref("videoTime");
-    
-        let isHost = false;  // Only the host controls playback time
-    
-        function loadVideo() {
-            const embedCode = document.getElementById('embedCode').value;
-            document.getElementById('videoContainer').innerHTML = embedCode;
-            
-            isHost = true; // Assume the first user to load a video is the host
-            
-            // Monitor video time every 2 seconds and sync to Firebase
-            setInterval(() => {
-                if (isHost) {
-                    sendGetTimeRequest();
-                }
-            }, 2000);
+
+        // Initialize Video.js player
+        let player = videojs('videoPlayer');
+
+        function fetchMovie() {
+            const tmdbId = document.getElementById("tmdbId").value;
+            if (!tmdbId) {
+                alert("Please enter a TMDB ID.");
+                return;
+            }
+
+            const apiUrl = `https://www.2embed.cc/embed/movie/tmdb/${tmdbId}`;
+
+            fetch(apiUrl)
+                .then(response => response.json()) 
+                .then(data => {
+                    if (data.stream_url) {
+                        player.src({ src: data.stream_url, type: 'application/x-mpegURL' });
+                        player.play();
+                    } else {
+                        alert("No stream found!");
+                    }
+                })
+                .catch(error => console.error("Error fetching movie:", error));
         }
-    
-        // Send a postMessage request to the embedded video player (if supported)
-        function sendGetTimeRequest() {
-            const iframe = document.querySelector('iframe');
-            if (iframe) {
-                try {
-                    iframe.contentWindow.postMessage({ action: "getTime" }, "*");
-                } catch (e) {
-                    console.log("Cannot request time: ", e);
-                }
+
+        function syncVideo() {
+            const syncTime = document.getElementById("syncTime").value;
+            if (syncTime) {
+                videoTimeRef.set(syncTime);
+                alert("Syncing time: " + syncTime + " seconds.");
             }
         }
-    
-        // Listen for messages from the iframe (if supported by provider)
-        window.addEventListener("message", (event) => {
-            if (typeof event.data === "object" && event.data.action === "sendTime") {
-                console.log("Received time:", event.data.time);
-                videoTimeRef.set(event.data.time); // Save the video time to Firebase
-            }
-        });
-    
-        // Listen for video time updates from Firebase and update the video
+
+        // Listen for time sync updates from Firebase
         videoTimeRef.on('value', (snapshot) => {
             const time = snapshot.val();
             if (time !== null) {
-                console.log("Syncing time:", time);
-                sendSetTimeRequest(time);
+                player.currentTime(time);
             }
         });
-    
-        // Send a message to set the video time (if provider supports it)
-        function sendSetTimeRequest(time) {
-            const iframe = document.querySelector('iframe');
-            if (iframe) {
-                try {
-                    iframe.contentWindow.postMessage({ action: "setTime", time: time }, "*");
-                } catch (e) {
-                    console.log("Cannot set time: ", e);
-                }
-            }
-        }
     </script>
-    
 </body>
 </html>
