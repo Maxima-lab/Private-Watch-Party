@@ -93,6 +93,8 @@
                     maxMaxBufferLength: 30,  // Limit the buffer to avoid overloading the player
                     maxBufferSize: 20 * 1000 * 1000, // Limit the buffer size to 20MB
                     maxBufferHole: 0.5, // Limit buffer holes
+                    fragLoadingTimeOut: 10000,  // Timeout for fragment loading
+                    fragLoadingMaxRetry: 0, // Disable retry attempts for fragment loading
                 });
 
                 hls.loadSource(streamUrl);
