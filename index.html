@@ -33,15 +33,8 @@
                 return;
             }
 
-            // Hardcoded mapping of IMDb IDs to stream URLs (Guru HLS in this case)
-            let streamUrl = '';
-
-            if (imdbId === 'tt0111161') {  // IMDb ID for Shawshank Redemption
-                streamUrl = 'https://guru-hls-stream.m3u8';  // Replace with actual Guru HLS URL
-            } else {
-                alert("Movie not found!");
-                return;
-            }
+            // Use a publicly available working HLS stream URL for testing
+            let streamUrl = 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8';  // Public stream
 
             // Create the video player dynamically
             const videoContainer = document.getElementById("videoContainer");
