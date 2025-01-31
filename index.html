@@ -10,6 +10,7 @@
         #videoContainer { margin-top: 20px; }
     </style>
     <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://vjs.zencdn.net/7.15.4/video.js"></script>
 </head>
 <body>
@@ -51,16 +52,26 @@
             videoElement.className = "video-js vjs-default-skin";
             videoElement.controls = true;
 
-            const source = document.createElement("source");
-            source.src = streamUrl;
-            source.type = 'application/x-mpegURL';
-            videoElement.appendChild(source);
-
+            // Append the video element to the container
             videoContainer.appendChild(videoElement);
 
-            // Initialize the Video.js player
-            const player = videojs('moviePlayer');
-            player.play();
+            // Initialize HLS.js and attach it to the video player
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(streamUrl);
+                hls.attachMedia(videoElement);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    videoElement.play();
+                });
+            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                // For browsers that support HLS natively (like Safari)
+                videoElement.src = streamUrl;
+                videoElement.addEventListener('canplay', function() {
+                    videoElement.play();
+                });
+            } else {
+                alert("Your browser doesn't support HLS streaming.");
+            }
         }
     </script>
 </body>
