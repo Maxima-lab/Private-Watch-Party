@@ -23,10 +23,6 @@
     <!-- Video Embed Container -->
     <div id="videoContainer"></div>  <!-- This is where the video player will be inserted -->
 
-    <!-- Firebase CDN -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
     <script>
         // Function to fetch the movie stream based on IMDb ID
         function fetchMovie() {
@@ -36,7 +32,7 @@
                 return;
             }
 
-            const apiUrl = `https://your-server-url/movie/${imdbId}`;
+            const apiUrl = `http://localhost:3000/movie/${imdbId}`;
 
             fetch(apiUrl)
                 .then(response => response.json())
@@ -66,26 +62,6 @@
                 })
                 .catch(error => console.error("Error fetching movie:", error));
         }
-
-        // Firebase configuration and setup
-        document.addEventListener("DOMContentLoaded", function() {
-            const firebaseConfig = {
-                apiKey: "AIzaSyBWNDZLIqkLSQUdswT-2H-jr-0Dg2gvuik",
-                authDomain: "private-watch-party.firebaseapp.com",
-                projectId: "private-watch-party",
-                storageBucket: "private-watch-party.firebasestorage.app",
-                messagingSenderId: "36283139121",
-                appId: "1:36283139121:web:cff1ed864b7349061c0110",
-                databaseURL: "https://private-watch-party-default-rtdb.asia-southeast1.firebasedatabase.app"
-            };
-
-            // Initialize Firebase
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.database();
-            let videoTimeRef = db.ref("videoTime");
-
-            // Other Firebase-related logic can go here
-        });
     </script>
 </body>
 </html>
