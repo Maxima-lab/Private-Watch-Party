@@ -56,17 +56,24 @@
             const video = document.querySelector('iframe');
             video.addEventListener('load', () => {
                 const player = video.contentWindow;
+
+                // Sync the video time from the host device to Firebase every second
                 setInterval(() => {
-                    const currentTime = player.document.querySelector('video').currentTime;
-                    videoTimeRef.set(currentTime); // Save video time to Firebase
+                    if (player.document.querySelector('video')) {
+                        const currentTime = player.document.querySelector('video').currentTime;
+                        videoTimeRef.set(currentTime); // Save the current video time to Firebase
+                    }
                 }, 1000);
             });
 
+            // Sync the video time from Firebase to all other devices
             videoTimeRef.on('value', (snapshot) => {
                 const time = snapshot.val();
                 if (time) {
                     const player = document.querySelector('iframe').contentWindow;
-                    player.document.querySelector('video').currentTime = time; // Sync video time across users
+                    if (player.document.querySelector('video')) {
+                        player.document.querySelector('video').currentTime = time; // Sync video time across devices
+                    }
                 }
             });
         }
