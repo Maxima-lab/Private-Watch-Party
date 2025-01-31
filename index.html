@@ -95,6 +95,7 @@
                     maxBufferHole: 0.5, // Limit buffer holes
                     fragLoadingTimeOut: 10000,  // Timeout for fragment loading
                     fragLoadingMaxRetry: 0, // Disable retry attempts for fragment loading
+                    enableWorker: false, // Disable the worker for more consistent playback
                 });
 
                 hls.loadSource(streamUrl);
