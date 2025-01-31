@@ -40,14 +40,15 @@
           projectId: "private-watch-party",
           storageBucket: "private-watch-party.firebasestorage.app",
           messagingSenderId: "36283139121",
-          appId: "1:36283139121:web:cff1ed864b7349061c0110"
+          appId: "1:36283139121:web:cff1ed864b7349061c0110",
+          databaseURL: "https://private-watch-party.firebaseio.com" // Add your database URL here
         };
 
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.database(app);
 
-        let videoTimeRef = db.ref("videoTime");
+        let videoTimeRef = db.ref("videoTime"); // Reference to store video time
 
         function loadVideo() {
             const embedCode = document.getElementById('embedCode').value;
@@ -57,22 +58,24 @@
             video.addEventListener('load', () => {
                 const player = video.contentWindow;
 
-                // Sync the video time from the host device to Firebase every second
+                // Sync video time to Firebase every second
                 setInterval(() => {
                     if (player.document.querySelector('video')) {
                         const currentTime = player.document.querySelector('video').currentTime;
-                        videoTimeRef.set(currentTime); // Save the current video time to Firebase
+                        console.log("Current Time: " + currentTime); // Log current time
+                        videoTimeRef.set(currentTime); // Write video time to Firebase
                     }
                 }, 1000);
             });
 
-            // Sync the video time from Firebase to all other devices
+            // Sync video time from Firebase to other devices
             videoTimeRef.on('value', (snapshot) => {
                 const time = snapshot.val();
+                console.log("Syncing Time: " + time); // Log time from Firebase
                 if (time) {
                     const player = document.querySelector('iframe').contentWindow;
                     if (player.document.querySelector('video')) {
-                        player.document.querySelector('video').currentTime = time; // Sync video time across devices
+                        player.document.querySelector('video').currentTime = time; // Sync video across devices
                     }
                 }
             });
