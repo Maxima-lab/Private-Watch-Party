@@ -28,10 +28,47 @@
     <button onclick="loadVideo()">Load Video</button>
     <div id="videoContainer"></div>
 
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyBWNDZLIqkLSQUdswT-2H-jr-0Dg2gvuik",
+          authDomain: "private-watch-party.firebaseapp.com",
+          projectId: "private-watch-party",
+          storageBucket: "private-watch-party.firebasestorage.app",
+          messagingSenderId: "36283139121",
+          appId: "1:36283139121:web:cff1ed864b7349061c0110"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database(app);
+
+        let videoTimeRef = db.ref("videoTime");
+
         function loadVideo() {
             const embedCode = document.getElementById('embedCode').value;
             document.getElementById('videoContainer').innerHTML = embedCode;
+
+            const video = document.querySelector('iframe');
+            video.addEventListener('load', () => {
+                const player = video.contentWindow;
+                setInterval(() => {
+                    const currentTime = player.document.querySelector('video').currentTime;
+                    videoTimeRef.set(currentTime); // Save video time to Firebase
+                }, 1000);
+            });
+
+            videoTimeRef.on('value', (snapshot) => {
+                const time = snapshot.val();
+                if (time) {
+                    const player = document.querySelector('iframe').contentWindow;
+                    player.document.querySelector('video').currentTime = time; // Sync video time across users
+                }
+            });
         }
     </script>
 </body>
