@@ -5,17 +5,24 @@ import cors from "cors";  // Import CORS middleware
 const app = express();
 app.use(cors());  // Enable CORS for all origins (you can specify a domain if needed)
 
-app.get("/movie/:tmdbId", async (req, res) => {
-    const { tmdbId } = req.params;
-    const apiUrl = `https://2embed.cc/embed/movie/tmdb/${tmdbId}`;
+app.get("/movie/:imdbId", async (req, res) => {
+    const { imdbId } = req.params;
 
-    try {
-        const response = await fetch(apiUrl);
-        const data = await response.text();  // Get HTML content (which includes the embed)
-        res.send(data);  // Send the embed code directly to frontend
-    } catch (error) {
-        res.status(500).json({ error: "Failed to fetch movie data" });
+    // Example of IMDb ID to HLS stream mapping
+    let streamUrl = '';
+
+    if (imdbId === 'tt0111161') {  // Example IMDb ID for Shawshank Redemption
+        streamUrl = 'https://guru-hls-stream.m3u8';  // Replace with actual Guru HLS URL
+    } else if (imdbId === 'tt0068646') {  // Example IMDb ID for The Godfather
+        streamUrl = 'https://ghost-hls-stream.m3u8';  // Replace with actual Ghost HLS URL
+    } else if (imdbId === 'tt0133093') {  // Example IMDb ID for The Matrix
+        streamUrl = 'https://fastx-hls-stream.m3u8';  // Replace with actual FastX HLS URL
+    } else {
+        return res.status(404).json({ error: "Movie not found" });
     }
+
+    // Send the stream URL to frontend
+    res.json({ streamUrl });
 });
 
 const PORT = 3000;

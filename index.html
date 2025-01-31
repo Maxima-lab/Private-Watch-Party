@@ -7,43 +7,61 @@
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
         input, button { padding: 10px; margin: 5px; }
-        iframe { width: 80%; height: 500px; border: none; }
+        #videoContainer { margin-top: 20px; }
     </style>
+    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet">
+    <script src="https://vjs.zencdn.net/7.15.4/video.js"></script>
 </head>
 <body>
     <h1>Watch Movie Together</h1>
 
-    <input type="text" id="tmdbId" placeholder="Enter TMDB Movie ID">
+    <input type="text" id="imdbId" placeholder="Enter IMDb Movie ID">
     <button onclick="fetchMovie()">Load Movie</button>
 
     <br><br>
 
     <!-- Video Embed Container -->
-    <div id="videoContainer"></div>  <!-- This is where the iframe will be inserted -->
+    <div id="videoContainer"></div>  <!-- This is where the video player will be inserted -->
 
     <!-- Firebase CDN -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
-        // Define fetchMovie() globally
+        // Function to fetch the movie stream based on IMDb ID
         function fetchMovie() {
-            const tmdbId = document.getElementById("tmdbId").value;
-            if (!tmdbId) {
-                alert("Please enter a TMDB ID.");
+            const imdbId = document.getElementById("imdbId").value;
+            if (!imdbId) {
+                alert("Please enter an IMDb ID.");
                 return;
             }
 
-            const apiUrl = `https://jubilant-eureka-pjgw95qgw5xqcrxq9-3000.app.github.dev/movie/${tmdbId}`;
+            const apiUrl = `https://your-server-url/movie/${imdbId}`;
 
             fetch(apiUrl)
-                .then(response => response.text())
+                .then(response => response.json())
                 .then(data => {
                     const videoContainer = document.getElementById("videoContainer");
                     if (videoContainer) {
-                        videoContainer.innerHTML = data;  // Set the iframe embed HTML inside videoContainer
-                    } else {
-                        console.error("videoContainer not found!");
+                        videoContainer.innerHTML = '';  // Clear previous video
+
+                        // Create the Video.js player dynamically
+                        const videoElement = document.createElement("video");
+                        videoElement.id = "moviePlayer";
+                        videoElement.className = "video-js vjs-default-skin";
+                        videoElement.controls = true;
+
+                        // Set the video source based on fetched stream URL
+                        const source = document.createElement("source");
+                        source.src = data.streamUrl;
+                        source.type = 'application/x-mpegURL';
+                        videoElement.appendChild(source);
+
+                        videoContainer.appendChild(videoElement);
+
+                        // Initialize the player
+                        const player = videojs('moviePlayer');
+                        player.play();
                     }
                 })
                 .catch(error => console.error("Error fetching movie:", error));
