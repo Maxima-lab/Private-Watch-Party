@@ -69,11 +69,27 @@
 
             // Initialize HLS.js and attach it to the video player
             if (Hls.isSupported()) {
-                const hls = new Hls();
+                const hls = new Hls({
+                    startLevel: 3,  // Set the default level to 720p (this depends on the stream, check the level corresponding to 720p)
+                    levelControl: 'auto', // Allow auto-level selection by HLS.js, but with a default level
+                    maxBufferLength: 30,
+                    maxMaxBufferLength: 60,
+                    capLevelToPlayerSize: true,
+                    debug: false, // Turn off debug logs to reduce clutter
+                });
+
                 hls.loadSource(streamUrl);
                 hls.attachMedia(videoElement);
+
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
                     videoElement.play();
+                });
+
+                // Handle errors
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        console.error("HLS.js Fatal Error:", data);
+                    }
                 });
             } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
                 // For browsers that support HLS natively (like Safari)
