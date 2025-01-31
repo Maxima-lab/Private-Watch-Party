@@ -110,6 +110,14 @@
                         console.error("HLS.js Fatal Error:", data);
                     }
                 });
+
+                // After initialization, we lock the quality
+                hls.on(Hls.Events.LEVEL_SWITCHED, function(event, data) {
+                    // Prevent switching to a higher quality
+                    if (data.level > getQualityLevel(selectedQuality)) {
+                        hls.startLevel = getQualityLevel(selectedQuality); // Lock to selected quality level
+                    }
+                });
             } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
                 // For browsers that support HLS natively (like Safari)
                 videoElement.src = streamUrl;
