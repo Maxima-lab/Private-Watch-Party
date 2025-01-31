@@ -63,107 +63,85 @@
                 return;
             }
 
-            // Use the new Big Buck Bunny stream URL
-            let streamUrl = 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8';  // Big Buck Bunny HLS stream
+            // Use the 2Embed API to fetch the video stream
+            const apiUrl = `https://2embed.cc/embed/movie/imdb/${imdbId}`;
 
-            // Create the video player dynamically
-            const videoContainer = document.getElementById("videoContainer");
-            videoContainer.innerHTML = '';  // Clear previous video
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.embed) {
+                        // Extract the video stream URL
+                        let streamUrl = data.embed;  // Assuming this returns an HLS-compatible URL
 
-            videoElement = document.createElement("video");
-            videoElement.id = "moviePlayer";
-            videoElement.className = "video-js vjs-default-skin";
-            videoElement.controls = true;
+                        // Create the video player dynamically
+                        const videoContainer = document.getElementById("videoContainer");
+                        videoContainer.innerHTML = '';  // Clear previous video
 
-            // Append the video element to the container
-            videoContainer.appendChild(videoElement);
+                        videoElement = document.createElement("video");
+                        videoElement.id = "moviePlayer";
+                        videoElement.className = "video-js vjs-default-skin";
+                        videoElement.controls = true;
 
-            // Initialize HLS.js and attach it to the video player
-            if (Hls.isSupported()) {
-                hls = new Hls({
-                    levelControl: 'manual',  // Disable automatic level control
-                    maxBufferLength: 10,  // Reduce buffer length to avoid overload
-                    maxMaxBufferLength: 30,  // Limit the maximum buffer length
-                    capLevelToPlayerSize: true,
-                    debug: false, // Turn off debug logs to reduce clutter
-                    startLevel: getQualityLevel(selectedQuality), // Set the start level
-                    autoStartLoad: true, // Prevent automatic level switching
-                    manualStartLevel: true, // Prevent HLS.js from switching the quality automatically
-                    startFrag: 0, // Start playing from the first fragment
-                    maxBufferSize: 10 * 1000 * 1000, // Limit the buffer size to 10MB
-                    maxBufferHole: 0.5, // Limit buffer holes
-                    fragLoadingTimeOut: 5000,  // Timeout for fragment loading
-                    fragLoadingMaxRetry: 0, // Disable retry attempts for fragment loading
-                    enableWorker: false, // Disable the worker for consistent playback
-                });
+                        // Append the video element to the container
+                        videoContainer.appendChild(videoElement);
 
-                hls.loadSource(streamUrl);
-                hls.attachMedia(videoElement);
+                        // Initialize HLS.js and attach it to the video player
+                        if (Hls.isSupported()) {
+                            hls = new Hls({
+                                levelControl: 'manual',  // Disable automatic level control
+                                maxBufferLength: 10,  // Reduce buffer length to avoid overload
+                                maxMaxBufferLength: 30,  // Limit the maximum buffer length
+                                capLevelToPlayerSize: true,
+                                debug: false, // Turn off debug logs to reduce clutter
+                                startLevel: getQualityLevel(selectedQuality), // Set the start level
+                                autoStartLoad: true, // Prevent automatic level switching
+                                manualStartLevel: true, // Prevent HLS.js from switching the quality automatically
+                                startFrag: 0, // Start playing from the first fragment
+                                maxBufferSize: 10 * 1000 * 1000, // Limit the buffer size to 10MB
+                                maxBufferHole: 0.5, // Limit buffer holes
+                                fragLoadingTimeOut: 5000,  // Timeout for fragment loading
+                                fragLoadingMaxRetry: 0, // Disable retry attempts for fragment loading
+                                enableWorker: false, // Disable the worker for consistent playback
+                            });
 
-                hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    videoElement.play();
-                });
+                            hls.loadSource(streamUrl);
+                            hls.attachMedia(videoElement);
 
-                // Handle errors
-                hls.on(Hls.Events.ERROR, function(event, data) {
-                    if (data.fatal) {
-                        console.error("HLS.js Fatal Error:", data);
+                            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                                videoElement.play();
+                            });
+
+                            // Handle errors
+                            hls.on(Hls.Events.ERROR, function(event, data) {
+                                if (data.fatal) {
+                                    console.error("HLS.js Fatal Error:", data);
+                                }
+                            });
+
+                            // After initialization, we lock the quality
+                            hls.on(Hls.Events.LEVEL_SWITCHED, function(event, data) {
+                                // Prevent switching to a higher quality
+                                if (data.level > getQualityLevel(selectedQuality)) {
+                                    hls.startLevel = getQualityLevel(selectedQuality); // Lock to selected quality level
+                                }
+                            });
+                        } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                            // For browsers that support HLS natively (like Safari)
+                            videoElement.src = streamUrl;
+                            videoElement.addEventListener('canplay', function() {
+                                videoElement.play();
+                            });
+                        } else {
+                            alert("Your browser doesn't support HLS streaming.");
+                        }
+                    } else {
+                        alert("Failed to fetch video stream.");
                     }
+                })
+                .catch(error => {
+                    console.error("Error fetching the movie:", error);
+                    alert("An error occurred while fetching the movie.");
                 });
-
-                // After initialization, we lock the quality
-                hls.on(Hls.Events.LEVEL_SWITCHED, function(event, data) {
-                    // Prevent switching to a higher quality
-                    if (data.level > getQualityLevel(selectedQuality)) {
-                        hls.startLevel = getQualityLevel(selectedQuality); // Lock to selected quality level
-                    }
-                });
-            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-                // For browsers that support HLS natively (like Safari)
-                videoElement.src = streamUrl;
-                videoElement.addEventListener('canplay', function() {
-                    videoElement.play();
-                });
-            } else {
-                alert("Your browser doesn't support HLS streaming.");
-            }
-
-            // Sync video state with Firebase
-            videoElement.addEventListener('play', () => {
-                videoRef.set({
-                    playing: true,
-                    currentTime: videoElement.currentTime
-                });
-            });
-
-            videoElement.addEventListener('pause', () => {
-                videoRef.set({
-                    playing: false,
-                    currentTime: videoElement.currentTime
-                });
-            });
-
-            // Sync video time with Firebase
-            videoElement.addEventListener('timeupdate', () => {
-                if (!videoElement.paused) {
-                    videoRef.update({
-                        currentTime: videoElement.currentTime
-                    });
-                }
-            });
-
-            // Listen to Firebase changes for sync
-            videoRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.currentTime) {
-                    videoElement.currentTime = data.currentTime;
-                    if (data.playing && videoElement.paused) {
-                        videoElement.play();
-                    } else if (!data.playing && !videoElement.paused) {
-                        videoElement.pause();
-                    }
-                }
-            });
         }
 
         // Function to convert selected quality into HLS.js level
