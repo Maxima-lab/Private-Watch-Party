@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Watch Party</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        textarea {
+            width: 80%;
+            height: 100px;
+            margin: 10px 0;
+        }
+        iframe {
+            width: 80%;
+            height: 500px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Watch Movie Together</h1>
+    <textarea id="embedCode" placeholder="Paste Embed Code Here"></textarea><br>
+    <button onclick="loadVideo()">Load Video</button>
+    <div id="videoContainer"></div>
+
+    <script>
+        function loadVideo() {
+            const embedCode = document.getElementById('embedCode').value;
+            document.getElementById('videoContainer').innerHTML = embedCode;
+        }
+    </script>
+</body>
+</html>
