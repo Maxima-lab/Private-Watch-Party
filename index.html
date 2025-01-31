@@ -35,68 +35,77 @@
     <script>
         // Firebase configuration
         const firebaseConfig = {
-          apiKey: "AIzaSyBWNDZLIqkLSQUdswT-2H-jr-0Dg2gvuik",
-          authDomain: "private-watch-party.firebaseapp.com",
-          projectId: "private-watch-party",
-          storageBucket: "private-watch-party.firebasestorage.app",
-          messagingSenderId: "36283139121",
-          appId: "1:36283139121:web:cff1ed864b7349061c0110",
-          databaseURL: "https://private-watch-party-default-rtdb.asia-southeast1.firebasedatabase.app" // Your correct Firebase DB URL
+            apiKey: "AIzaSyBWNDZLIqkLSQUdswT-2H-jr-0Dg2gvuik",
+            authDomain: "private-watch-party.firebaseapp.com",
+            projectId: "private-watch-party",
+            storageBucket: "private-watch-party.firebasestorage.app",
+            messagingSenderId: "36283139121",
+            appId: "1:36283139121:web:cff1ed864b7349061c0110",
+            databaseURL: "https://private-watch-party-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
-
+    
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
         let videoTimeRef = db.ref("videoTime");
-
+    
+        let isHost = false;  // Only the host controls playback time
+    
         function loadVideo() {
             const embedCode = document.getElementById('embedCode').value;
             document.getElementById('videoContainer').innerHTML = embedCode;
-
-            const video = document.querySelector('iframe');
-            video.addEventListener('load', () => {
-                const player = video.contentWindow;
-
-                // Sync video time to Firebase every second
-                setInterval(() => {
-                    const currentTime = getVideoTime(player);
-                    if (currentTime !== null) {
-                        console.log("Current Time: " + currentTime); // Log current time
-                        videoTimeRef.set(currentTime); // Save video time to Firebase
-                    }
-                }, 1000);
-            });
-
-            // Sync the video time from Firebase to all other devices
-            videoTimeRef.on('value', (snapshot) => {
-                const time = snapshot.val();
-                console.log("Syncing Time: " + time); // Log synced time from Firebase
-                if (time) {
-                    const player = document.querySelector('iframe').contentWindow;
-                    setVideoTime(player, time); // Sync video time across devices
+            
+            isHost = true; // Assume the first user to load a video is the host
+            
+            // Monitor video time every 2 seconds and sync to Firebase
+            setInterval(() => {
+                if (isHost) {
+                    sendGetTimeRequest();
                 }
-            });
+            }, 2000);
         }
-
-        // Function to get the current video time from the Vidsrc iframe
-        function getVideoTime(player) {
-            try {
-                return player.document.querySelector('video').currentTime; // Get the video time
-            } catch (e) {
-                console.log("Error getting video time:", e);
-                return null;
+    
+        // Send a postMessage request to the embedded video player (if supported)
+        function sendGetTimeRequest() {
+            const iframe = document.querySelector('iframe');
+            if (iframe) {
+                try {
+                    iframe.contentWindow.postMessage({ action: "getTime" }, "*");
+                } catch (e) {
+                    console.log("Cannot request time: ", e);
+                }
             }
         }
-
-        // Function to set the video time on the Vidsrc iframe (syncing across devices)
-        function setVideoTime(player, time) {
-            try {
-                player.postMessage({ action: 'seek', time: time }, '*');
-            } catch (e) {
-                console.log("Error setting video time:", e);
+    
+        // Listen for messages from the iframe (if supported by provider)
+        window.addEventListener("message", (event) => {
+            if (typeof event.data === "object" && event.data.action === "sendTime") {
+                console.log("Received time:", event.data.time);
+                videoTimeRef.set(event.data.time); // Save the video time to Firebase
+            }
+        });
+    
+        // Listen for video time updates from Firebase and update the video
+        videoTimeRef.on('value', (snapshot) => {
+            const time = snapshot.val();
+            if (time !== null) {
+                console.log("Syncing time:", time);
+                sendSetTimeRequest(time);
+            }
+        });
+    
+        // Send a message to set the video time (if provider supports it)
+        function sendSetTimeRequest(time) {
+            const iframe = document.querySelector('iframe');
+            if (iframe) {
+                try {
+                    iframe.contentWindow.postMessage({ action: "setTime", time: time }, "*");
+                } catch (e) {
+                    console.log("Cannot set time: ", e);
+                }
             }
         }
     </script>
+    
 </body>
 </html>
