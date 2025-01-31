@@ -26,8 +26,31 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
+        // Define fetchMovie() globally
+        function fetchMovie() {
+            const tmdbId = document.getElementById("tmdbId").value;
+            if (!tmdbId) {
+                alert("Please enter a TMDB ID.");
+                return;
+            }
+
+            const apiUrl = `https://jubilant-eureka-pjgw95qgw5xqcrxq9-3000.app.github.dev/movie/${tmdbId}`;
+
+            fetch(apiUrl)
+                .then(response => response.text())
+                .then(data => {
+                    const videoContainer = document.getElementById("videoContainer");
+                    if (videoContainer) {
+                        videoContainer.innerHTML = data;  // Set the iframe embed HTML inside videoContainer
+                    } else {
+                        console.error("videoContainer not found!");
+                    }
+                })
+                .catch(error => console.error("Error fetching movie:", error));
+        }
+
+        // Firebase configuration and setup
         document.addEventListener("DOMContentLoaded", function() {
-            // Firebase configuration
             const firebaseConfig = {
                 apiKey: "AIzaSyBWNDZLIqkLSQUdswT-2H-jr-0Dg2gvuik",
                 authDomain: "private-watch-party.firebaseapp.com",
@@ -43,28 +66,7 @@
             const db = firebase.database();
             let videoTimeRef = db.ref("videoTime");
 
-            // Fetch movie from the backend server
-            function fetchMovie() {
-                const tmdbId = document.getElementById("tmdbId").value;
-                if (!tmdbId) {
-                    alert("Please enter a TMDB ID.");
-                    return;
-                }
-
-                const apiUrl = `https://jubilant-eureka-pjgw95qgw5xqcrxq9-3000.app.github.dev/movie/${tmdbId}`;
-
-                fetch(apiUrl)
-                    .then(response => response.text())
-                    .then(data => {
-                        const videoContainer = document.getElementById("videoContainer");
-                        if (videoContainer) {
-                            videoContainer.innerHTML = data;  // Set the iframe embed HTML inside videoContainer
-                        } else {
-                            console.error("videoContainer not found!");
-                        }
-                    })
-                    .catch(error => console.error("Error fetching movie:", error));
-            }
+            // Other Firebase-related logic can go here
         });
     </script>
 </body>
