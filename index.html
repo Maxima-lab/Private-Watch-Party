@@ -53,7 +53,7 @@
 
         let videoElement = null;
         let hls = null;
-        let selectedQuality = '720p';  // Default to 720p
+        let selectedQuality = '720p'; // Default to 720p initially
 
         // Function to fetch the movie stream based on IMDb ID
         function fetchMovie() {
@@ -81,13 +81,16 @@
             // Initialize HLS.js and attach it to the video player
             if (Hls.isSupported()) {
                 hls = new Hls({
-                    startLevel: getLevelFromQuality(selectedQuality),  // Set start level based on selected quality
-                    autoStartLoad: true,  // Force loading at start level
-                    capLevelToPlayerSize: true,  // Prevent adaptive bitrate above player size
-                    maxBufferLength: 30,  // Adjust buffering to reduce stuttering
+                    levelControl: 'auto',  // Allow auto-level selection by HLS.js
+                    maxBufferLength: 30,
                     maxMaxBufferLength: 60,
-                    levelControl: 'manual',  // Disables automatic bitrate switching
-                    debug: false,  // Turn off debug logs to reduce clutter
+                    capLevelToPlayerSize: true,
+                    debug: false, // Turn off debug logs to reduce clutter
+                    startLevel: getQualityLevel(selectedQuality), // Start with the selected quality
+                    autoStartLoad: true,  // Prevent automatic level switching
+                    // Disable dynamic quality switching
+                    manualStartLevel: true,  // Don't let HLS.js auto-adjust the quality
+                    startFrag: 0 // Start playing from the first fragment
                 });
 
                 hls.loadSource(streamUrl);
@@ -151,27 +154,29 @@
             });
         }
 
-        // Function to change video quality based on user selection
-        function changeQuality() {
-            selectedQuality = document.getElementById('qualitySelector').value;
-            if (hls) {
-                hls.startLevel = getLevelFromQuality(selectedQuality);  // Change level based on selected quality
-                hls.loadSource(hls.url);  // Reload the stream with new level
-                hls.attachMedia(videoElement);  // Attach to video element again
+        // Function to convert selected quality into HLS.js level
+        function getQualityLevel(quality) {
+            switch (quality) {
+                case '1080p':
+                    return 2; // 1080p (assuming level 2 is 1080p)
+                case '720p':
+                    return 1; // 720p (assuming level 1 is 720p)
+                case '480p':
+                    return 0; // 480p (assuming level 0 is 480p)
+                default:
+                    return 1; // Default to 720p
             }
         }
 
-        // Function to get the level number for the selected quality
-        function getLevelFromQuality(quality) {
-            switch (quality) {
-                case '1080p':
-                    return 2;  // Assuming 1080p is level 2 (check your stream's levels)
-                case '720p':
-                    return 1;  // Assuming 720p is level 1
-                case '480p':
-                    return 0;  // Assuming 480p is level 0
-                default:
-                    return 1;  // Default to 720p
+        // Function to change video quality based on user selection
+        function changeQuality() {
+            selectedQuality = document.getElementById('qualitySelector').value;
+
+            // Reload the stream with the selected quality
+            if (hls) {
+                hls.startLevel = getQualityLevel(selectedQuality);  // Set the start level
+                hls.loadSource(hls.url);  // Reload the stream with the new quality
+                hls.attachMedia(videoElement);  // Attach to the video element again
             }
         }
     </script>
