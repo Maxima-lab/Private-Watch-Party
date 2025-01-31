@@ -89,6 +89,10 @@
                     startLevel: getQualityLevel(selectedQuality), // Set the start level
                     autoStartLoad: true, // Prevent automatic level switching
                     manualStartLevel: true, // Prevent HLS.js from switching the quality automatically
+                    startFrag: 0, // Start playing from the first fragment
+                    maxMaxBufferLength: 30,  // Limit the buffer to avoid overloading the player
+                    maxBufferSize: 20 * 1000 * 1000, // Limit the buffer size to 20MB
+                    maxBufferHole: 0.5, // Limit buffer holes
                 });
 
                 hls.loadSource(streamUrl);
