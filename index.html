@@ -41,14 +41,14 @@
           storageBucket: "private-watch-party.firebasestorage.app",
           messagingSenderId: "36283139121",
           appId: "1:36283139121:web:cff1ed864b7349061c0110",
-          databaseURL: "https://private-watch-party-default-rtdb.asia-southeast1.firebasedatabase.app/" // Add your database URL here
+          databaseURL: "https://private-watch-party.firebaseio.com" // Firebase DB URL
         };
 
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.database(app);
 
-        let videoTimeRef = db.ref("videoTime"); // Reference to store video time
+        let videoTimeRef = db.ref("videoTime");
 
         function loadVideo() {
             const embedCode = document.getElementById('embedCode').value;
@@ -56,29 +56,47 @@
 
             const video = document.querySelector('iframe');
             video.addEventListener('load', () => {
+                // Send play/pause updates via postMessage() to the iframe (Vidsrc)
                 const player = video.contentWindow;
 
                 // Sync video time to Firebase every second
                 setInterval(() => {
-                    if (player.document.querySelector('video')) {
-                        const currentTime = player.document.querySelector('video').currentTime;
+                    const currentTime = getVideoTime(player);
+                    if (currentTime !== null) {
                         console.log("Current Time: " + currentTime); // Log current time
-                        videoTimeRef.set(currentTime); // Write video time to Firebase
+                        videoTimeRef.set(currentTime); // Save video time to Firebase
                     }
                 }, 1000);
             });
 
-            // Sync video time from Firebase to other devices
+            // Sync the video time from Firebase to all other devices
             videoTimeRef.on('value', (snapshot) => {
                 const time = snapshot.val();
-                console.log("Syncing Time: " + time); // Log time from Firebase
+                console.log("Syncing Time: " + time); // Log synced time from Firebase
                 if (time) {
                     const player = document.querySelector('iframe').contentWindow;
-                    if (player.document.querySelector('video')) {
-                        player.document.querySelector('video').currentTime = time; // Sync video across devices
-                    }
+                    setVideoTime(player, time); // Sync video time across devices
                 }
             });
+        }
+
+        // Function to get the current video time from the Vidsrc iframe
+        function getVideoTime(player) {
+            try {
+                return player.document.querySelector('video').currentTime; // Get the video time
+            } catch (e) {
+                console.log("Error getting video time:", e);
+                return null;
+            }
+        }
+
+        // Function to set the video time on the Vidsrc iframe (syncing across devices)
+        function setVideoTime(player, time) {
+            try {
+                player.postMessage({ action: 'seek', time: time }, '*');
+            } catch (e) {
+                console.log("Error setting video time:", e);
+            }
         }
     </script>
 </body>
