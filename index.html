@@ -28,9 +28,9 @@
     <button onclick="loadVideo()">Load Video</button>
     <div id="videoContainer"></div>
 
-    <!-- Firebase CDN -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <!-- Non-module Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
         // Firebase configuration
@@ -45,8 +45,8 @@
         };
 
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.database(app);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
         let videoTimeRef = db.ref("videoTime");
 
@@ -56,7 +56,6 @@
 
             const video = document.querySelector('iframe');
             video.addEventListener('load', () => {
-                // Send play/pause updates via postMessage() to the iframe (Vidsrc)
                 const player = video.contentWindow;
 
                 // Sync video time to Firebase every second
