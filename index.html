@@ -81,16 +81,14 @@
             // Initialize HLS.js and attach it to the video player
             if (Hls.isSupported()) {
                 hls = new Hls({
-                    levelControl: 'auto',  // Allow auto-level selection by HLS.js
+                    levelControl: 'manual',  // Disable automatic level control
                     maxBufferLength: 30,
                     maxMaxBufferLength: 60,
                     capLevelToPlayerSize: true,
                     debug: false, // Turn off debug logs to reduce clutter
-                    startLevel: getQualityLevel(selectedQuality), // Start with the selected quality
-                    autoStartLoad: true,  // Prevent automatic level switching
-                    // Disable dynamic quality switching
-                    manualStartLevel: true,  // Don't let HLS.js auto-adjust the quality
-                    startFrag: 0 // Start playing from the first fragment
+                    startLevel: getQualityLevel(selectedQuality), // Set the start level
+                    autoStartLoad: true, // Prevent automatic level switching
+                    manualStartLevel: true, // Prevent HLS.js from switching the quality automatically
                 });
 
                 hls.loadSource(streamUrl);
