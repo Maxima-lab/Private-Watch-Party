@@ -32,35 +32,35 @@
                 return;
             }
 
-            const apiUrl = `http://localhost:3000/movie/${imdbId}`;
+            // Hardcoded mapping of IMDb IDs to stream URLs (Guru HLS in this case)
+            let streamUrl = '';
 
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const videoContainer = document.getElementById("videoContainer");
-                    if (videoContainer) {
-                        videoContainer.innerHTML = '';  // Clear previous video
+            if (imdbId === 'tt0111161') {  // IMDb ID for Shawshank Redemption
+                streamUrl = 'https://guru-hls-stream.m3u8';  // Replace with actual Guru HLS URL
+            } else {
+                alert("Movie not found!");
+                return;
+            }
 
-                        // Create the Video.js player dynamically
-                        const videoElement = document.createElement("video");
-                        videoElement.id = "moviePlayer";
-                        videoElement.className = "video-js vjs-default-skin";
-                        videoElement.controls = true;
+            // Create the video player dynamically
+            const videoContainer = document.getElementById("videoContainer");
+            videoContainer.innerHTML = '';  // Clear previous video
 
-                        // Set the video source based on fetched stream URL
-                        const source = document.createElement("source");
-                        source.src = data.streamUrl;
-                        source.type = 'application/x-mpegURL';
-                        videoElement.appendChild(source);
+            const videoElement = document.createElement("video");
+            videoElement.id = "moviePlayer";
+            videoElement.className = "video-js vjs-default-skin";
+            videoElement.controls = true;
 
-                        videoContainer.appendChild(videoElement);
+            const source = document.createElement("source");
+            source.src = streamUrl;
+            source.type = 'application/x-mpegURL';
+            videoElement.appendChild(source);
 
-                        // Initialize the player
-                        const player = videojs('moviePlayer');
-                        player.play();
-                    }
-                })
-                .catch(error => console.error("Error fetching movie:", error));
+            videoContainer.appendChild(videoElement);
+
+            // Initialize the Video.js player
+            const player = videojs('moviePlayer');
+            player.play();
         }
     </script>
 </body>
