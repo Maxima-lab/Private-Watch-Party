@@ -26,24 +26,24 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBWNDZLIqkLSQUdswT-2H-jr-0Dg2gvuik",
-            authDomain: "private-watch-party.firebaseapp.com",
-            projectId: "private-watch-party",
-            storageBucket: "private-watch-party.firebasestorage.app",
-            messagingSenderId: "36283139121",
-            appId: "1:36283139121:web:cff1ed864b7349061c0110",
-            databaseURL: "https://private-watch-party-default-rtdb.asia-southeast1.firebasedatabase.app"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        let videoTimeRef = db.ref("videoTime");
-
-        // Ensure the page is fully loaded before running the script
         document.addEventListener("DOMContentLoaded", function() {
+            // Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyBWNDZLIqkLSQUdswT-2H-jr-0Dg2gvuik",
+                authDomain: "private-watch-party.firebaseapp.com",
+                projectId: "private-watch-party",
+                storageBucket: "private-watch-party.firebasestorage.app",
+                messagingSenderId: "36283139121",
+                appId: "1:36283139121:web:cff1ed864b7349061c0110",
+                databaseURL: "https://private-watch-party-default-rtdb.asia-southeast1.firebasedatabase.app"
+            };
+
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+            let videoTimeRef = db.ref("videoTime");
+
+            // Fetch movie from the backend server
             function fetchMovie() {
                 const tmdbId = document.getElementById("tmdbId").value;
                 if (!tmdbId) {
