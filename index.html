@@ -53,26 +53,22 @@
         let player = videojs('videoPlayer');
 
         function fetchMovie() {
-            const tmdbId = document.getElementById("tmdbId").value;
-            if (!tmdbId) {
-                alert("Please enter a TMDB ID.");
-                return;
-            }
+    const tmdbId = document.getElementById("tmdbId").value;
+    if (!tmdbId) {
+        alert("Please enter a TMDB ID.");
+        return;
+    }
 
-            const apiUrl = `https://www.2embed.cc/embed/movie/tmdb/${tmdbId}`;
+    const apiUrl = `https://cors-anywhere.herokuapp.com/https://www.2embed.cc/embed/movie/tmdb/${tmdbId}`;
 
-            fetch(apiUrl)
-                .then(response => response.json()) 
-                .then(data => {
-                    if (data.stream_url) {
-                        player.src({ src: data.stream_url, type: 'application/x-mpegURL' });
-                        player.play();
-                    } else {
-                        alert("No stream found!");
-                    }
-                })
-                .catch(error => console.error("Error fetching movie:", error));
-        }
+    fetch(apiUrl)
+        .then(response => response.text()) 
+        .then(data => {
+            document.getElementById("videoContainer").innerHTML = data;
+        })
+        .catch(error => console.error("Error fetching movie:", error));
+}
+
 
         function syncVideo() {
             const syncTime = document.getElementById("syncTime").value;
